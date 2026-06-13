@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARBULAK - Бағалар пайызын есептеу генераторы</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts for Cyrillic support -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom print styling for the official report card */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printableReport, #printableReport * {
+                visibility: visible;
+            }
+            #printableReport {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Top Header / Banner -->
+    <header class="bg-gradient-to-r from-teal-800 to-cyan-900 text-white shadow-xl relative overflow-hidden">
+        <!-- Abstract glowing circles in background -->
+        <div class="absolute -top-10 -left-10 w-40 h-40 bg-teal-500 rounded-full opacity-20 blur-2xl"></div>
+        <div class="absolute -bottom-20 -right-10 w-60 h-60 bg-cyan-400 rounded-full opacity-10 blur-3xl"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Brand Identity -->
+                <div class="flex items-center gap-4">
+                    <div class="bg-white text-teal-900 p-3 rounded-2xl shadow-inner font-extrabold text-2xl tracking-wider border-2 border-cyan-400 flex items-center justify-center">
+                        <span class="text-teal-800">JAR</span><span class="text-cyan-500">BULAK</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight">Қазақ тілінен білім сапасын талдау</h1>
+                        <p class="text-xs md:text-sm text-teal-200">Бағалардың проценттік үлесі мен сапа көрсеткішін автоматты есептегіш</p>
+                    </div>
+                </div>
+                <!-- Mini Quick Actions -->
+                <div class="flex gap-2">
+                    <button onclick="loadDemoData()" class="bg-teal-700/50 hover:bg-teal-700 text-white text-xs px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 border border-teal-600">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Үлгі толтыру</span>
+                    </button>
+                    <button onclick="resetForm()" class="bg-red-900/40 hover:bg-red-900/60 text-white text-xs px-3 py-2 rounded-lg transition-all flex items-center gap-1.5 border border-red-700/50">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Тазарту</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        
+        <!-- Feedback Toast Message Box -->
+        <div id="toastMessage" class="hidden fixed top-5 right-5 z-50 bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-[-20px] transition-all duration-300">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <span id="toastText" class="font-medium text-sm">Мәліметтер сәтті көшірілді!</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Inputs (5 Columns on Large Screen) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Card 1: Report Metadata (Class, Teacher, Subject details) -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="p-2 bg-teal-50 text-teal-600 rounded-lg"><i class="fa-solid fa-folder-open"></i></span>
+                        <h2 class="text-lg font-bold text-gray-800">Жалпы мәліметтер</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Пән атауы</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                    <i class="fa-solid fa-book-open"></i>
+                                </span>
+                                <input type="text" id="subjectName" value="Қазақ тілі" class="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Сынып</label>
+                                <input type="text" id="className" placeholder="Мысалы: 7 &quot;А&quot;" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Мұғалімнің А.Ә.Т.</label>
+                                <input type="text" id="teacherName" placeholder="Мысалы: А. С. Алиева" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 text-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Есептің түрі / Тақырыбы</label>
+                            <select id="reportTheme" class="w-full px-3 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-700 text-sm">
+                                <option value="БЖБ талдауы">БЖБ (Бөлім бойынша жиынтық бағалау)</option>
+                                <option value="ТЖБ талдауы">ТЖБ (Тоқсандық жиынтық бағалау)</option>
+                                <option value="Тоқсандық есеп">Тоқсандық қорытынды бағалар</option>
+                                <option value="Жылдық есеп">Жылдық қорытынды бағалар</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Students Grade Counts -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="p-2 bg-cyan-50 text-cyan-600 rounded-lg"><i class="fa-solid fa-calculator"></i></span>
+                        <h2 class="text-lg font-bold text-gray-800">Бағалар санын енгізу</h2>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mb-4">Әр баға алған оқушылар санын енгізіңіз. Пайыздар автоматты түрде нақты уақытта есептеледі.</p>
+
+                    <div class="space-y-4">
+                        <!-- Grade 5 -->
+                        <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-extrabold text-xl shadow">5</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-800">"Өте жақсы"</h4>
+                                    <span class="text-xs text-gray-400">Өте жақсы көрсеткіш</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="adjustCount('grade5', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">-</button>
+                                <input type="number" id="grade5" value="0" min="0" oninput="calculateResults()" class="w-16 text-center py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 font-bold">
+                                <button type="button" onclick="adjustCount('grade5', 1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Grade 4 -->
+                        <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-100 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-extrabold text-xl shadow">4</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-800">"Жақсы"</h4>
+                                    <span class="text-xs text-gray-400">Жақсы көрсеткіш</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="adjustCount('grade4', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">-</button>
+                                <input type="number" id="grade4" value="0" min="0" oninput="calculateResults()" class="w-16 text-center py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 font-bold">
+                                <button type="button" onclick="adjustCount('grade4', 1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Grade 3 -->
+                        <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-100 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-amber-500 text-white rounded-lg flex items-center justify-center font-extrabold text-xl shadow">3</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-800">"Қанағаттанарлық"</h4>
+                                    <span class="text-xs text-gray-400">Орташа деңгей</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="adjustCount('grade3', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">-</button>
+                                <input type="number" id="grade3" value="0" min="0" oninput="calculateResults()" class="w-16 text-center py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-800 font-bold">
+                                <button type="button" onclick="adjustCount('grade3', 1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">+</button>
+                            </div>
+                        </div>
+
+                        <!-- Grade 2 -->
+                        <div class="bg-rose-50/50 p-3 rounded-xl border border-rose-100 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-rose-600 text-white rounded-lg flex items-center justify-center font-extrabold text-xl shadow">2</div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-800">"Қанағаттанғысыз"</h4>
+                                    <span class="text-xs text-gray-400">Төмен нәтиже</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="adjustCount('grade2', -1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">-</button>
+                                <input type="number" id="grade2" value="0" min="0" oninput="calculateResults()" class="w-16 text-center py-1.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-rose-500 text-gray-800 font-bold">
+                                <button type="button" onclick="adjustCount('grade2', 1)" class="w-8 h-8 rounded-lg bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 flex items-center justify-center font-bold text-sm transition-all shadow-sm">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Calculations & Beautiful Results (7 Columns on Large Screen) -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- KPI Badges (Main Statistics Overview) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- General student count -->
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div class="p-3.5 bg-gray-100 text-gray-600 rounded-xl"><i class="fa-solid fa-users text-xl"></i></div>
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-400 uppercase">Жалпы оқушы</span>
+                            <span id="totalStudentsBadge" class="text-2xl font-black text-gray-800">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Quality of knowledge -->
+                    <div class="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 shadow-sm border border-emerald-100 flex items-center gap-4">
+                        <div class="p-3.5 bg-emerald-500 text-white rounded-xl"><i class="fa-solid fa-star text-xl"></i></div>
+                        <div>
+                            <span class="block text-xs font-semibold text-teal-700 uppercase">Білім сапасы</span>
+                            <span id="qualityBadge" class="text-2xl font-black text-emerald-700">0%</span>
+                        </div>
+                    </div>
+
+                    <!-- Success rate -->
+                    <div class="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-5 shadow-sm border border-cyan-100 flex items-center gap-4">
+                        <div class="p-3.5 bg-cyan-500 text-white rounded-xl"><i class="fa-solid fa-chart-line text-xl"></i></div>
+                        <div>
+                            <span class="block text-xs font-semibold text-cyan-700 uppercase">Үлгерім пайызы</span>
+                            <span id="successBadge" class="text-2xl font-black text-cyan-700">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Graphical Visualization Section -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-md"><i class="fa-solid fa-chart-pie"></i></span>
+                        Бағалардың диаграммасы мен пайыздық үлестері
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <!-- Chart canvas (5 Cols) -->
+                        <div class="md:col-span-5 flex justify-center">
+                            <div class="relative w-44 h-44">
+                                <canvas id="gradeChart"></canvas>
+                                <!-- absolute center text in donut chart -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-xs text-gray-400 uppercase font-semibold">Жалпы</span>
+                                    <span id="donutCenterTotal" class="text-2xl font-extrabold text-gray-700">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar Listing (7 Cols) -->
+                        <div class="md:col-span-7 space-y-3.5">
+                            <!-- Prog 5 -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-gray-600">"5" (Өте жақсы)</span>
+                                    <span id="p5Text" class="text-emerald-600">0 оқушы (0%)</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div id="p5Bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Prog 4 -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-gray-600">"4" (Жақсы)</span>
+                                    <span id="p4Text" class="text-blue-600">0 оқушы (0%)</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div id="p4Bar" class="bg-blue-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Prog 3 -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-gray-600">"3" (Қанағаттанарлық)</span>
+                                    <span id="p3Text" class="text-amber-600">0 оқушы (0%)</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div id="p3Bar" class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Prog 2 -->
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-gray-600">"2" (Қанағаттанғысыз)</span>
+                                    <span id="p2Text" class="text-rose-600">0 оқушы (0%)</span>
+                                </div>
+                                <div class="w-full bg-gray-100 rounded-full h-2.5">
+                                    <div id="p2Bar" class="bg-rose-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Printable and copyable official report sheet -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <span class="p-1.5 bg-teal-50 text-teal-600 rounded-md"><i class="fa-solid fa-file-invoice"></i></span>
+                            Басып шығаруға арналған ресми есептеме
+                        </h3>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                            <button onclick="copyToClipboard()" class="flex-1 sm:flex-none px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>Мәтінді көшіру</span>
+                            </button>
+                            <button onclick="window.print()" class="flex-1 sm:flex-none px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-print"></i>
+                                <span>Басып шығару</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Printable Container with official academic look -->
+                    <div id="printableReport" class="p-6 md:p-8 bg-white border-2 border-dashed border-gray-200 rounded-2xl text-slate-800">
+                        <!-- JARBULAK Official Header -->
+                        <div class="border-b-2 border-teal-800 pb-4 mb-6 flex justify-between items-center flex-wrap gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="font-extrabold text-xl tracking-wider text-teal-800">
+                                    <span>JAR</span><span class="text-cyan-500">BULAK</span>
+                                </div>
+                                <span class="text-gray-300">|</span>
+                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Education Report</span>
+                            </div>
+                            <span class="text-xs text-gray-400" id="currentDateText">Дата: --/--/----</span>
+                        </div>
+
+                        <!-- Document Title -->
+                        <div class="text-center mb-6">
+                            <h2 class="text-lg font-bold uppercase text-gray-800" id="docMainTitle">ҚАЗАҚ ТІЛІ ПӘНІ БОЙЫНША БІЛІМ САПАСЫН ТАЛДАУ</h2>
+                            <p class="text-sm text-gray-500" id="docSubTitle">Сынып: ---- | Мұғалім: -------</p>
+                        </div>
+
+                        <!-- Data Table -->
+                        <table class="w-full text-left text-sm border-collapse mb-6">
+                            <thead>
+                                <tr class="bg-gray-100 border-b border-gray-200">
+                                    <th class="py-2.5 px-4 font-bold text-gray-700">Бағалау бағалары</th>
+                                    <th class="py-2.5 px-4 font-bold text-gray-700 text-center">Оқушы саны</th>
+                                    <th class="py-2.5 px-4 font-bold text-gray-700 text-right">Пайыздық үлесі (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-3 px-4 flex items-center gap-2">
+                                        <span class="w-5 h-5 bg-emerald-100 text-emerald-800 rounded text-center text-xs font-bold leading-5">5</span>
+                                        <span>"Өте жақсы"</span>
+                                    </td>
+                                    <td id="table5Count" class="py-3 px-4 text-center font-semibold">0</td>
+                                    <td id="table5Percent" class="py-3 px-4 text-right font-bold text-emerald-600">0%</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 flex items-center gap-2">
+                                        <span class="w-5 h-5 bg-blue-100 text-blue-800 rounded text-center text-xs font-bold leading-5">4</span>
+                                        <span>"Жақсы"</span>
+                                    </td>
+                                    <td id="table4Count" class="py-3 px-4 text-center font-semibold">0</td>
+                                    <td id="table4Percent" class="py-3 px-4 text-right font-bold text-blue-600">0%</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 flex items-center gap-2">
+                                        <span class="w-5 h-5 bg-amber-100 text-amber-800 rounded text-center text-xs font-bold leading-5">3</span>
+                                        <span>"Қанағаттанарлық"</span>
+                                    </td>
+                                    <td id="table3Count" class="py-3 px-4 text-center font-semibold">0</td>
+                                    <td id="table3Percent" class="py-3 px-4 text-right font-bold text-amber-600">0%</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 flex items-center gap-2">
+                                        <span class="w-5 h-5 bg-rose-100 text-rose-800 rounded text-center text-xs font-bold leading-5">2</span>
+                                        <span>"Қанағаттанғысыз"</span>
+                                    </td>
+                                    <td id="table2Count" class="py-3 px-4 text-center font-semibold">0</td>
+                                    <td id="table2Percent" class="py-3 px-4 text-right font-bold text-rose-600">0%</td>
+                                </tr>
+                                <tr class="bg-teal-50/50 font-bold border-t border-teal-200">
+                                    <td class="py-3 px-4 text-teal-800">ЖАЛПЫ:</td>
+                                    <td id="tableTotalCount" class="py-3 px-4 text-center text-teal-800">0 оқушы</td>
+                                    <td class="py-3 px-4 text-right text-teal-800">100%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Key Performance Indicators Box -->
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase font-semibold">Білім сапасы (5-тік және 4-тік):</span>
+                                <div class="text-lg font-black text-emerald-700 mt-1" id="tableQuality">0%</div>
+                                <p class="text-[10px] text-gray-400">("5" + "4") бағаларын алғандардың үлесі</p>
+                            </div>
+                            <div>
+                                <span class="text-xs text-gray-500 uppercase font-semibold">Оқу үлгерімі (5-тік, 4-тік, 3-тік):</span>
+                                <div class="text-lg font-black text-cyan-700 mt-1" id="tableSuccess">0%</div>
+                                <p class="text-[10px] text-gray-400">("5" + "4" + "3") бағаларын алғандардың үлесі</p>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Conclusions (Dynamic paragraph) -->
+                        <div class="border-t border-gray-100 pt-4">
+                            <h4 class="text-xs font-bold uppercase text-gray-500 mb-1">Мұғалім қорытындысы мен аналитикалық сипаттамасы</h4>
+                            <p id="analysisDescriptionText" class="text-xs leading-relaxed text-gray-600 italic">
+                                Мәліметтерді енгізгеннен кейін, мұнда талдамалық қорытынды мәтіні автоматты түрде жасалады...
+                            </p>
+                        </div>
+
+                        <!-- Footer Signatures -->
+                        <div class="flex justify-between items-end mt-12 pt-6 border-t border-gray-100 text-xs text-gray-400">
+                            <div>
+                                <p>Есептемені әзірлеген:</p>
+                                <p class="font-bold text-gray-700 mt-2" id="signerTeacherName">_________________</p>
+                            </div>
+                            <div class="text-right">
+                                <p>Қолы:</p>
+                                <p class="font-bold text-gray-700 mt-2">_________________ (қолы)</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Web Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-bold text-slate-300">© 2026 JARBULAK Education Portal. Барлық құқықтар қорғалған.</p>
+            <p class="mt-1">Оқытушыларға арналған ақылды есептеме жүйелері.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts for dynamic updates -->
+    <script>
+        // Chart object keeper
+        let gradeDonutChart = null;
+
+        // On window load, render blank states and preset current date
+        window.onload = function() {
+            setTodayDate();
+            initChart();
+            calculateResults();
+        }
+
+        // Setup current date in dynamic report
+        function setTodayDate() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            document.getElementById('currentDateText').innerText = `Күні: ${day}.${month}.${year}`;
+        }
+
+        // Adjust input counts using incremental buttons
+        function adjustCount(id, amount) {
+            const input = document.getElementById(id);
+            let currentVal = parseInt(input.value) || 0;
+            currentVal += amount;
+            if (currentVal < 0) currentVal = 0;
+            input.value = currentVal;
+            calculateResults();
+        }
+
+        // Load premium sample/demo data
+        function loadDemoData() {
+            document.getElementById('subjectName').value = "Қазақ тілі мен әдебиеті";
+            document.getElementById('className').value = '8 "Б"';
+            document.getElementById('teacherName').value = "Ахметова Айнұр Бақытқызы";
+            document.getElementById('reportTheme').value = "БЖБ талдауы";
+            
+            document.getElementById('grade5').value = 8;
+            document.getElementById('grade4').value = 11;
+            document.getElementById('grade3').value = 5;
+            document.getElementById('grade2').value = 1;
+            
+            calculateResults();
+            showToast("Демонстрациялық мәліметтер жүктелді!");
+        }
+
+        // Reset all inputs to initial states
+        function resetForm() {
+            document.getElementById('className').value = "";
+            document.getElementById('teacherName').value = "";
+            document.getElementById('grade5').value = 0;
+            document.getElementById('grade4').value = 0;
+            document.getElementById('grade3').value = 0;
+            document.getElementById('grade2').value = 0;
+            
+            calculateResults();
+            showToast("Форма тазартылды.");
+        }
+
+        // Initialize empty Chart.js
+        function initChart() {
+            const ctx = document.getElementById('gradeChart').getContext('2d');
+            gradeDonutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['5 (Өте жақсы)', '4 (Жақсы)', '3 (Қанағат)', '2 (Төмен)'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f43f5e'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${context.raw} оқушы`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Main logic to calculate grade percentages, Quality and Success rates
+        function calculateResults() {
+            // Fetch inputs
+            const subName = document.getElementById('subjectName').value || "Қазақ тілі";
+            const clsName = document.getElementById('className').value || "____";
+            const tchrName = document.getElementById('teacherName').value || "_____________";
+            const reportType = document.getElementById('reportTheme').value;
+
+            const g5 = Math.max(0, parseInt(document.getElementById('grade5').value) || 0);
+            const g4 = Math.max(0, parseInt(document.getElementById('grade4').value) || 0);
+            const g3 = Math.max(0, parseInt(document.getElementById('grade3').value) || 0);
+            const g2 = Math.max(0, parseInt(document.getElementById('grade2').value) || 0);
+
+            // Re-assign corrected values in case user typed negative numbers manually
+            document.getElementById('grade5').value = g5;
+            document.getElementById('grade4').value = g4;
+            document.getElementById('grade3').value = g3;
+            document.getElementById('grade2').value = g2;
+
+            const total = g5 + g4 + g3 + g2;
+
+            // Calculate Percentages
+            const p5 = total > 0 ? ((g5 / total) * 100).toFixed(1) : "0.0";
+            const p4 = total > 0 ? ((g4 / total) * 100).toFixed(1) : "0.0";
+            const p3 = total > 0 ? ((g3 / total) * 100).toFixed(1) : "0.0";
+            const p2 = total > 0 ? ((g2 / total) * 100).toFixed(1) : "0.0";
+
+            // Quality of Knowledge: (5 + 4) / total
+            const quality = total > 0 ? (((g5 + g4) / total) * 100).toFixed(1) : "0.0";
+            
+            // Success Rate (Үлгерім): (5 + 4 + 3) / total
+            const success = total > 0 ? (((g5 + g4 + g3) / total) * 100).toFixed(1) : "0.0";
+
+            // Update UI widgets
+            document.getElementById('totalStudentsBadge').innerText = total;
+            document.getElementById('donutCenterTotal').innerText = total;
+            document.getElementById('qualityBadge').innerText = `${quality}%`;
+            document.getElementById('successBadge').innerText = `${success}%`;
+
+            // Update Progress Bars & Text
+            document.getElementById('p5Text').innerText = `${g5} оқушы (${p5}%)`;
+            document.getElementById('p5Bar').style.width = `${p5}%`;
+
+            document.getElementById('p4Text').innerText = `${g4} оқушы (${p4}%)`;
+            document.getElementById('p4Bar').style.width = `${p4}%`;
+
+            document.getElementById('p3Text').innerText = `${g3} оқушы (${p3}%)`;
+            document.getElementById('p3Bar').style.width = `${p3}%`;
+
+            document.getElementById('p2Text').innerText = `${g2} оқушы (${p2}%)`;
+            document.getElementById('p2Bar').style.width = `${p2}%`;
+
+            // Update Printable Document Elements
+            document.getElementById('docMainTitle').innerText = `${subName.toUpperCase()} ПӘНІ БОЙЫНША ${reportType.toUpperCase()}`;
+            document.getElementById('docSubTitle').innerText = `Сынып: ${clsName} | Мұғалім: ${tchrName}`;
+            
+            document.getElementById('table5Count').innerText = g5;
+            document.getElementById('table5Percent').innerText = `${p5}%`;
+
+            document.getElementById('table4Count').innerText = g4;
+            document.getElementById('table4Percent').innerText = `${p4}%`;
+
+            document.getElementById('table3Count').innerText = g3;
+            document.getElementById('table3Percent').innerText = `${p3}%`;
+
+            document.getElementById('table2Count').innerText = g2;
+            document.getElementById('table2Percent').innerText = `${p2}%`;
+
+            document.getElementById('tableTotalCount').innerText = `${total} оқушы`;
+            document.getElementById('tableQuality').innerText = `${quality}%`;
+            document.getElementById('tableSuccess').innerText = `${success}%`;
+            document.getElementById('signerTeacherName').innerText = tchrName;
+
+            // Generate analytical conclusions dynamically
+            generateAnalysisConclusion(subName, clsName, total, g5, g4, g3, g2, quality, success);
+
+            // Update Chart.js data
+            if (gradeDonutChart) {
+                gradeDonutChart.data.datasets[0].data = [g5, g4, g3, g2];
+                gradeDonutChart.update();
+            }
+        }
+
+        // Generate dynamic academic report narrative paragraph
+        function generateAnalysisConclusion(sub, cls, total, g5, g4, g3, g2, quality, success) {
+            const descEl = document.getElementById('analysisDescriptionText');
+            if (total === 0) {
+                descEl.innerHTML = "Есептеме жасау үшін бағалар мен оқушылар санын көрсетіңіз.";
+                return;
+            }
+
+            let analysisText = `Аналитикалық қорытынды: Есеп берілген сыныпта жалпы <strong>${total}</strong> оқушы қатысты. `;
+            analysisText += `Пәнді меңгеру деңгейін зерттеу нәтижесінде: «5» (өте жақсы) бағасын <strong>${g5}</strong> оқушы (${((g5/total)*100).toFixed(1)}%), `;
+            analysisText += `«4» (жақсы) бағасын <strong>${g4}</strong> оқушы (${((g4/total)*100).toFixed(1)}%), `;
+            analysisText += `«3» (қанағаттанарлық) бағасын <strong>${g3}</strong> оқушы (${((g3/total)*100).toFixed(1)}%) алды. `;
+            
+            if (g2 > 0) {
+                analysisText += `«2» (қанағаттанғысыз) бағасын алған оқушы саны - <strong>${g2}</strong> (${((g2/total)*100).toFixed(1)}%). Бұл оқушылармен жеке түзету жұмыстарын жүргізу талап етіледі. `;
+            } else {
+                analysisText += `Сыныпта «2» алған үлгермеуші оқушылар тіркелген жоқ (0.0%). `;
+            }
+
+            analysisText += `<br><br>Сыныптың жалпы <strong>білім сапасы ${quality}%</strong> деңгейін көрсетіп отыр, ал оқушылардың <strong>үлгерімі ${success}%</strong>-ды құрады. `;
+
+            if (parseFloat(quality) >= 70) {
+                analysisText += "Алынған нәтиже сыныптың қазақ тілі пәнін жоғары деңгейде игергенін дәлелдейді.";
+            } else if (parseFloat(quality) >= 45) {
+                analysisText += "Бұл орташа қанағаттанарлық көрсеткіш. Алдағы уақытта білім сапасын одан әрі арттыру үшін қосымша дамытушы сабақтар жүргізу ұсынылады.";
+            } else {
+                analysisText += "Білім сапасының деңгейі төмен. Оқушылардың тақырыптарды игеру деңгейін жақсарту мақсатында жеке түзету сабақтарын жоспарлау қажет.";
+            }
+
+            descEl.innerHTML = analysisText;
+        }
+
+        // Toast feedback box animator
+        function showToast(message) {
+            const toast = document.getElementById('toastMessage');
+            const toastText = document.getElementById('toastText');
+            toastText.innerText = message;
+            
+            toast.classList.remove('hidden');
+            toast.classList.remove('opacity-0');
+            toast.classList.add('flex');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                    toast.classList.remove('flex');
+                }, 300);
+            }, 3000);
+        }
+
+        // Copy raw textual report to clipboard (compatible with iframe sandbox)
+        function copyToClipboard() {
+            const subName = document.getElementById('subjectName').value || "Қазақ тілі";
+            const clsName = document.getElementById('className').value || "____";
+            const tchrName = document.getElementById('teacherName').value || "_____________";
+            const reportType = document.getElementById('reportTheme').value;
+
+            const g5 = document.getElementById('grade5').value;
+            const g4 = document.getElementById('grade4').value;
+            const g3 = document.getElementById('grade3').value;
+            const g2 = document.getElementById('grade2').value;
+            const total = parseInt(g5)+parseInt(g4)+parseInt(g3)+parseInt(g2);
+            
+            const p5 = document.getElementById('p5Text').innerText.split('(')[1].replace(')', '');
+            const p4 = document.getElementById('p4Text').innerText.split('(')[1].replace(')', '');
+            const p3 = document.getElementById('p3Text').innerText.split('(')[1].replace(')', '');
+            const p2 = document.getElementById('p2Text').innerText.split('(')[1].replace(')', '');
+
+            const quality = document.getElementById('qualityBadge').innerText;
+            const success = document.getElementById('successBadge').innerText;
+
+            const rawText = `JARBULAK БІЛІМ БЕРУ ОРТАЛЫҒЫ / ЕСЕПТЕМЕ\n` +
+                            `------------------------------------------\n` +
+                            `Тақырыбы: ${subName} пәні бойынша ${reportType}\n` +
+                            `Сыныбы: ${clsName} | Мұғалімі: ${tchrName}\n` +
+                            `------------------------------------------\n` +
+                            `Бағалар статистикасы:\n` +
+                            ` - "5" (Өте жақсы): ${g5} оқушы (${p5})\n` +
+                            ` - "4" (Жақсы): ${g4} оқушы (${p4})\n` +
+                            ` - "3" (Қанағаттанарлық): ${g3} оқушы (${p3})\n` +
+                            ` - "2" (Қанағаттанғысыз): ${g2} оқушы (${p2})\n` +
+                            `------------------------------------------\n` +
+                            `Жалпы оқушы саны: ${total}\n` +
+                            `Білім сапасы: ${quality}\n` +
+                            `Үлгерім көрсеткіші: ${success}\n` +
+                            `------------------------------------------\n` +
+                            `Құрылған уақыты: ${new Date().toLocaleDateString('kk-KK')}\n` +
+                            `Құрал: JARBULAK Есептеме Баға Генераторы`;
+
+            // Dummy textarea execution method
+            const dummyTextArea = document.createElement("textarea");
+            document.body.appendChild(dummyTextArea);
+            dummyTextArea.value = rawText;
+            dummyTextArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummyTextArea);
+
+            showToast("Есептеме мәтіні буферге көшірілді!");
+        }
+    </script>
+</body>
+</html>
